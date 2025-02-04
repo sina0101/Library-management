@@ -8,87 +8,57 @@ class BookBank:
         self.create_table()
 
     def create_table(self):
-        """Create the book_bank table if it doesn't exist."""
+        """ایجاد جدول در دیتابیس اگر وجود نداشته باشد."""
         self.cur.execute('''
-            CREATE TABLE IF NOT EXISTS book_bank(
-                id INTEGER PRIMARY KEY,
-                title VARCHAR(30),
-                author VARCHAR(30),
+            CREATE TABLE IF NOT EXISTS book_bank (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                author TEXT,
                 year INTEGER,
-                subject VARCHAR(20)
+                subject TEXT
             )
         ''')
         self.conn.commit()
 
     def insert(self, title, author, year, subject):
-        """Insert a new book into the book_bank table."""
-        self.cur.execute('''
-            INSERT INTO book_bank(title, author, year, subject) 
-            VALUES(?, ?, ?, ?)
-        ''', (title, author, year, subject))
+        """افزودن یک کتاب جدید."""
+        self.cur.execute('INSERT INTO book_bank (title, author, year, subject) VALUES (?, ?, ?, ?)',
+                         (title, author, year, subject))
         self.conn.commit()
 
-    def edit(self, id, field, new_value):
-        """Edit a book's information based on the given field."""
+    def edit(self, book_id, field, new_value):
+        """ویرایش اطلاعات یک کتاب."""
         if field in ['title', 'author', 'year', 'subject']:
-            self.cur.execute(f'''
-                UPDATE book_bank 
-                SET {field} = ? 
-                WHERE id = ?
-            ''', (new_value, id))
+            self.cur.execute(f'UPDATE book_bank SET {field} = ? WHERE id = ?', (new_value, book_id))
             self.conn.commit()
         else:
-            raise ValueError("Invalid field specified")
+            raise ValueError("فیلد نامعتبر است!")
 
-    def delete_with_id(self, id_for_delete):
-        """Delete a book from the book_bank table based on its ID."""
-        self.cur.execute('''
-            DELETE FROM book_bank 
-            WHERE id = ?
-        ''', (id_for_delete,))
+    def delete(self, book_id):
+        """حذف کتاب با آی‌دی مشخص."""
+        self.cur.execute('DELETE FROM book_bank WHERE id = ?', (book_id,))
         self.conn.commit()
 
     def search(self, field, search_value):
-        """Search for books based on a specific field and value."""
+        """جستجو در دیتابیس بر اساس یک فیلد."""
         if field in ['title', 'author', 'year', 'subject']:
-            self.cur.execute(f'''
-                SELECT * 
-                FROM book_bank 
-                WHERE {field} = ?
-            ''', (search_value,))
+            self.cur.execute(f'SELECT * FROM book_bank WHERE {field} LIKE ?', ('%' + search_value + '%',))
             return self.cur.fetchall()
         else:
-            raise ValueError("Invalid field specified")
+            raise ValueError("فیلد نامعتبر است!")
 
     def show_all(self):
-        """Retrieve all books from the book_bank table."""
+        """دریافت تمام کتاب‌ها از دیتابیس."""
         self.cur.execute('SELECT * FROM book_bank')
         return self.cur.fetchall()
 
     def close(self):
-        """Close the database connection."""
+        """بستن اتصال به دیتابیس."""
         self.conn.close()
 
-# Example usage:
-if __name__ == "__main__":
-    db = BookBank()
+# تست سریع
 
-    # Insert a new book
-    db.insert("The Great Gatsby", "F. Scott Fitzgerald", 1925, "Fiction")
-
-    # Edit a book's year
-    db.edit(1, 'year', 1926)
-
-    # Search for books by author
-    books_by_author = db.search('author', 'F. Scott Fitzgerald')
-    print(books_by_author)
-
-    # Show all books
-    all_books = db.show_all()
-    print(all_books)
-
-    # Delete a book by ID
-    db.delete_with_id(1)
-
-    # Close the database connection
-    db.close()
+db = BookBank()
+db.insert("1984", "George Orwell", 1949, "Dystopian")
+print(db.show_all())
+db.close()
